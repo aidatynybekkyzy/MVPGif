@@ -24,13 +24,12 @@ class MainActivity : AppCompatActivity(), Contract.MainView {
     private var presenter: MainActivityPresenter? = null
     private var adapter: CustomRecyclerAdapter? = null
 
-    private var dm : DownloadManager? = null
-    private var requestId : Long = 0L
-    private var fileName =""
+    private var dm: DownloadManager? = null
+    private var requestId: Long = 0L
+    private  var fileName = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -38,23 +37,15 @@ class MainActivity : AppCompatActivity(), Contract.MainView {
         presenter = MainActivityPresenter(this)
         presenter?.onLoadTrending()
 
-        val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        registerReceiver(downloadReceiver, filter)
+        val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)//  опеределили то что мы хотим получать в ответ
+        registerReceiver(downloadReceiver,filter)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        try {
-            unregisterReceiver(downloadReceiver)
-        } catch (ex : IllegalArgumentException) {
-            ///.......
-        }
-    }
     private fun initRecycler() {
         val lm = GridLayoutManager(this, 2)
         binding.gifsRecycler.layoutManager = lm
         adapter = CustomRecyclerAdapter(ArrayList()) {
-            downloadGif(it)
+
         }
         binding.gifsRecycler.adapter = adapter
         binding.gifsRecycler.addOnScrollListener(object : PagedScrollListener(lm) {
@@ -65,6 +56,7 @@ class MainActivity : AppCompatActivity(), Contract.MainView {
             override fun loadMoreItems() {
                 presenter?.onLoadTrending()
             }
+
         })
     }
 
@@ -73,34 +65,47 @@ class MainActivity : AppCompatActivity(), Contract.MainView {
         val link = item.images.original.url
         dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val uri = Uri.parse(link)
-        fileName = System.currentTimeMillis().toString() + ".gif"
-        val request = DownloadManager.Request(uri)
-        request.setTitle("Downloading GIF")
-        request.setDescription("wait a second....")
-        request.setDestinationInExternalFilesDir(this, "gifsToShare", fileName)
-        requestId = dm?.enqueue(request) ?: 0L
+        fileName = System.currentTimeMillis().toString() + ".gif" //чтобы гифки отличались друг от друга
+        val request = DownloadManager.Request(uri) // запрос на загрузку
+        request.setTitle("Downloading Gif")
+        request.setDescription("wait a second...") // описание
+        request.setDestinationInExternalFilesDir(this,"gifsToShare",fileName)//(директория)адрес данного файла зависит от того что мы тут указывваем
+        requestId= dm?.enqueue(request)?: 0 //поставить в очеред запрос на скачивание, при вызове возвращает лонг цифру - это айди запроса
+
     }
 
-    private val downloadReceiver = object  : BroadcastReceiver() {
+    private val downloadReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
-            val  id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-            if (id == requestId) {
+
+            val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID,-1)
+            if(id == requestId ){
                 showLoading(false)
-                val path = getExternalFilesDir("gifsToShare").toString() + "/" + fileName
+                val path = getExternalFilesDir("gifsToShare").toString() + "/"+ fileName
                 val file = File(path)
 
-                val m: Method = StrictMode :: class.java.getMethod("disableDeathOnFileUriExposure")
+                val m: Method = StrictMode::class.java.getMethod("disableDeathOnFileUriExposure") //
                 m.invoke(null)
 
                 val myIntent = Intent(Intent.ACTION_SEND)
-                myIntent.type = "image/*"
+                myIntent.type = "image/*" // Какого формата указывается после слеш и *
                 myIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file))
-                startActivity(Intent.createChooser(myIntent,"Share Gif"))
+                startActivity(Intent.createChooser(myIntent,"Share GIF")) // окно выбора опций, куда надо отправить
+                println(path)
             }
-            println("Receiver")
+
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            unregisterReceiver(downloadReceiver) // ресейвер отключается
+        } catch (ex:IllegalArgumentException){
+            print("error")
+        }
+
+
+    }
     override fun showTrending(data: List<GifItem>) {
         adapter?.addData(data)
     }
