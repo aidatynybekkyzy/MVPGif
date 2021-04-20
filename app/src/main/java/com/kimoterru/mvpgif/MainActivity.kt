@@ -18,6 +18,7 @@ import com.kimoterru.mvpgif.utils.PagedScrollListener
 import java.io.File
 import java.lang.IllegalArgumentException
 import java.lang.reflect.Method
+//added comment
 
 class MainActivity : AppCompatActivity(), Contract.MainView {
     private lateinit var binding: ActivityMainBinding
