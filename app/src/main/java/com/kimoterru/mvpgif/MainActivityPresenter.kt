@@ -15,11 +15,13 @@ class MainActivityPresenter(val view: Contract.MainView?) : Contract.MainPresent
             object : Contract.MainListener {
                 override fun onResponse(response: GifResponse) {
                     processResponse(response)
+                    isLoading = false
+                    view?.showLoading(isLoading)
                 }
 
                 override fun onFailure(t: Throwable) {
                     view?.showError(t.message ?:"OOW")
-                    isLoading = false
+                    isLastPage = false
                     view?.showLoading(isLoading)
                 }
 

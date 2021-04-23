@@ -3,6 +3,8 @@
     package="com.kimoterru.mvpgif">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> // на запрашиваеие разрешение к записи
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> // запрос на чтение
 
     <application
         android:allowBackup="true"
